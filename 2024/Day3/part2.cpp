@@ -41,14 +41,14 @@ int main(int argc, char* argv[]) {
     auto endLine = cumLine.cend();
     while(regex_search(startLine, endLine, matchEnable, enable)) {
         string stringtobeMatched = matchEnable.str(3);
-        //cout << "String to be matched: " << stringtobeMatched << endl;
+        //cout << stringtobeMatched  << "\n\n"<< endl;
         auto startText = stringtobeMatched.cbegin();
         auto endText = stringtobeMatched.cend();
         while(regex_search(startText, endText, matchValues, pattern)) {
             a = stoi(matchValues[1]);
             b = stoi(matchValues[2]);
             counter += a*b;
-            //cout << matchValues[1] << " * " << matchValues[2] << " " << a*b << endl;
+            //cout << matchValues[1] << " * " << matchValues[2] << " = " << a*b << " sum = " << counter << endl;
             startText += (matchValues.length(0) + matchValues.position(0));
         }
 
@@ -56,5 +56,4 @@ int main(int argc, char* argv[]) {
     }
 
     cout << "Soluzione: " << counter << endl;
-    //cout << "Counter: " << counter << endl;
 }
