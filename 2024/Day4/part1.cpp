@@ -13,6 +13,15 @@ int findXMASVertical(int, int, vector<string>);
 int findXMASDiagonalRight(int, int, vector<string>);
 int findXMASDiagonalLeft(int, int, vector<string>);
 
+bool isWithinBounds(int x, int y, int rows, int cols) {
+    return x >= 0 && y >= 0 && x < rows && y < cols;
+}
+
+bool isWithinBounds(int x, int rows) {
+    return x >= 0 && x < rows;
+}
+
+
 int main(int argc, char* argv[]) {
 
     // get the file input
@@ -82,7 +91,7 @@ int findXMASHorizontal(int x, int y, vector<string> ws) {
     for(int move = -3; move <= 3; move++) {
         // If its out of bounds, we dont want to append
         // If its in bounds, we want to append
-        if(y + move >= 0 && y + move < ws[x].size()) {
+        if(isWithinBounds(y+move, ws[x].size())) {
             wordtoCheck += ws[x][y + move];
         }
     }
@@ -111,7 +120,7 @@ int findXMASVertical(int x, int y, vector<string> ws) {
     for(int move = -3; move <= 3; move++) {
         // If its out of bounds, we dont want to append
         // If its in bounds, we want to append
-        if(x + move >= 0 && x + move < ws.size()) {
+        if(isWithinBounds(x+move, ws.size())) {
             wordtoCheck += ws[x + move][y];
         }
     }
@@ -138,7 +147,7 @@ int findXMASDiagonalLeft(int x, int y, vector<string> ws) {
     for(int move = -3; move <= 3; move++) {
         // If its out of bounds, we dont want to append
         // If its in bounds, we want to append
-        if(x + move >= 0 && y + move >= 0 && x + move < ws.size() && y + move < ws[x].size()) {
+        if(isWithinBounds(x+move, y+move, ws.size(), ws[x].size())) {
             wordtoCheck += ws[x + move][y + move];
         }
     }
@@ -164,11 +173,9 @@ int findXMASDiagonalRight(int x, int y, vector<string> ws) {
     string wordtoCheck = "";
 
     // Check the diagonal right
-    for(int move = 3; move >= -3; move--) {
-        // If its out of bounds, we dont want to append
-        // If its in bounds, we want to append
-        if(x + move >= 0 && y + move >= 0 && x + move < ws.size() && y + move < ws[x].size()) {
-            wordtoCheck += ws[x + move][y + move];
+    for (int move = -3; move <= 3; move++) {
+         if(isWithinBounds(x+move, y-move, ws.size(), ws[x].size())) {
+            wordtoCheck += ws[x + move][y - move];
         }
     }
 
