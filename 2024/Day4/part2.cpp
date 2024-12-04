@@ -7,8 +7,8 @@
 #include <iostream>
 using namespace std;
 
-bool findXMASDiagonalRight(int, int, vector<string>);
-bool findXMASDiagonalLeft(int, int, vector<string>);
+bool findMASDL(int, int, vector<string>);
+bool findMASDR(int, int, vector<string>);
 
 bool isWithinBounds(int x, int y, int rows, int cols) {
     return x >= 0 && y >= 0 && x < rows && y < cols;
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < ws.size(); i++) {
         for(int j = 0; j < ws[i].size(); j++) {
             if(ws[i][j] == 'A') {
-                if(findXMASDiagonalLeft(i, j, ws) && findXMASDiagonalRight(i, j, ws))
+                if(findMASDL(i, j, ws) && findMASDR(i, j, ws))
                     sol++;
             }
         }
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 
 
 // Takes the point where the X is and checks if the word XMAS is in the matrix
-bool findXMASDiagonalLeft(int x, int y, vector<string> ws) {
+bool findMASDL(int x, int y, vector<string> ws) {
     string wordtoCheck = "";
 
     // Check the diagonal left
@@ -102,7 +102,7 @@ bool findXMASDiagonalLeft(int x, int y, vector<string> ws) {
 }
 
 
-bool findXMASDiagonalRight(int x, int y, vector<string> ws) {
+bool findMASDR(int x, int y, vector<string> ws) {
     string wordtoCheck = "";
 
     // Check the diagonal right
