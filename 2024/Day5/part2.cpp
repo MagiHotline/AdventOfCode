@@ -15,11 +15,11 @@ typedef struct Rule {
 
 int returnMiddleValueinUpdate(vector<int>);
 bool isWellCorrected(vector<rule>, vector<int>);
-void fixUpdate(vector<rule>, vector<int>);
-void swap(int &a, int &b) {
-    int temp = a;
-    a = b;
-    b = temp;
+int fixUpdate(vector<rule>, vector<int>);
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
 }
 
 int main(int argc, char* argv[]) {
@@ -64,9 +64,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < updates.size(); i++) {
         // Take the incorrected updates...
         if(!isWellCorrected(rules, updates[i])) {
-            fixUpdate(rules, updates[i]);
-            // And then add the middle value!
-            sol += returnMiddleValueinUpdate(updates[i]);
+            sol += fixUpdate(rules, updates[i]);
         }
     }
 
@@ -81,8 +79,7 @@ int returnMiddleValueinUpdate(vector<int> arr) {
     return arr[arr.size()/2];
 }
 
-
-void fixUpdate(vector<rule> rules, vector<int> update) {
+int fixUpdate(vector<rule> rules, vector<int> update) {
     vector<int> fixedUpdate;
     int savePos = 0;
     unordered_set<int> check;
@@ -90,24 +87,31 @@ void fixUpdate(vector<rule> rules, vector<int> update) {
     for(int i = 0; i < update.size(); i++) check.insert(update[i]);
     bool swapped;
 
-    for(int i = 0; i < update.size(); i++) {
-        swapped = false;
-        // Check if there are rules like x|update[i]
-        for(int j = 0; j < rules.size(); j++) {
-            if(rules[j].succ == update[i]) {
-                // CHECK FOR EVERY RULE WHERE UPDATE[I] APPEARS AS A SUCC, AND SEARCH PREC INTO THE UPDATE
-                if(check.find(rules[j].prec) != check.end()) {
-                    for(int k = i+1; k < update.size() && !swapped; k++) {
-                        // IF THE ELEMENT THAT SHOULD BE BEFORE IS AFTER, THEN I SWAP
-                        if(update[k] == rules[j].prec) {
-                            swap(update[i], update[k]);
-                            swapped = true;
+    while(!isWellCorrected(rules, update)) {
+        for(int i = 0; i < update.size(); i++) {
+            swapped = false;
+            // Check if there are rules like x|update[i]
+            for(int j = 0; j < rules.size(); j++) {
+                if(rules[j].succ == update[i]) {
+                    // CHECK FOR EVERY RULE WHERE UPDATE[I] APPEARS AS A SUCC, AND SEARCH PREC INTO THE UPDATE
+                    if(check.find(rules[j].prec) != check.end()) {
+                        for(int k = i+1; k < update.size() && !swapped; k++) {
+                            // IF THE ELEMENT THAT SHOULD BE BEFORE IS AFTER, THEN I SWAP
+                            if(update[k] == rules[j].prec) {
+                                swap(update[i], update[k]);
+                                swapped = true;
+                            }
                         }
                     }
                 }
             }
+
+            cout << update[i] << " ";
         }
+        cout << endl;
     }
+
+    return returnMiddleValueinUpdate(update);
 }
 
 // Checls for every update[i] in r.succ and check for the update]
