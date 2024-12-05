@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    // get the files
+    // Get the files
     FILE *inputRules = fopen(argv[1], "r");
     ifstream inputUpdates(argv[2]);
     if(!inputRules || !inputUpdates) {
@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    // get the rules
+    // GEt the rules
     vector<rule> rules;
     while(!feof(inputRules))
     {
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
         rules.push_back(r);
     }
 
-    // get the updates
+    // Get the updates
     vector< vector<int> > updates;
     while(!inputUpdates.eof()) {
         vector<int> update;
@@ -64,6 +64,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < updates.size(); i++) {
         // Take the incorrected updates...
         if(!isWellCorrected(rules, updates[i])) {
+            // And fix them!
             sol += fixUpdate(rules, updates[i]);
         }
     }
@@ -75,10 +76,12 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+// Function that returns the middle value of the vector
 int returnMiddleValueinUpdate(vector<int> arr) {
     return arr[arr.size()/2];
 }
 
+// Function that fixes the update based on the rules
 int fixUpdate(vector<rule> rules, vector<int> update) {
     vector<int> fixedUpdate;
     int savePos = 0;
@@ -105,12 +108,10 @@ int fixUpdate(vector<rule> rules, vector<int> update) {
                     }
                 }
             }
-
-            cout << update[i] << " ";
         }
-        cout << endl;
     }
 
+    // Return the middle value of the fixed update
     return returnMiddleValueinUpdate(update);
 }
 
