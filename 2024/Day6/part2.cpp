@@ -137,6 +137,22 @@ int main(int argc, char* argv[]) {
         prison[xguard][yguard] = '^'; // Reset the guard in the matrix
             // ALGORITMO
             while(isWithinBounds(guard, prison)) {
+            //displayMatrix(prison);
+            // Detect if the guard is stuck
+                bool canMove = false;
+                if (isWithinBounds(Point(guard.x - 1, guard.y), prison) && prison[guard.x - 1][guard.y] != '#') canMove = true;
+                if (isWithinBounds(Point(guard.x + 1, guard.y), prison) && prison[guard.x + 1][guard.y] != '#') canMove = true;
+                if (isWithinBounds(Point(guard.x, guard.y - 1), prison) && prison[guard.x][guard.y - 1] != '#') canMove = true;
+                if (isWithinBounds(Point(guard.x, guard.y + 1), prison) && prison[guard.x][guard.y + 1] != '#') canMove = true;
+
+                if (!canMove) {
+                    //cout << "Guard is stuck" << endl;
+                    // When it ends, remove the guard from the prison
+                    prison[guard.x][guard.y] = '.';
+                    countCycles++; // Increment the cycles
+                    prison[p.x][p.y] = '.'; // Reset the obstacle
+                    break;
+                }
                 if(check[prison[guard.x][guard.y]].find(guard) != check[prison[guard.x][guard.y]].end()) {
                     countSameSpot++;
                 }
@@ -205,8 +221,13 @@ int main(int argc, char* argv[]) {
             // Reset the obstacle position after the cycle
             prison[p.x][p.y] = '.';
     }
+
+    check.clear();
+    points.clear();
+
     //cout << "Position of the guard: " << guard.x << " " << guard.y << endl;
     cout << "Solution: " << countCycles << endl;
+    input.clear();
     input.close();
     return 0;
 }
@@ -218,8 +239,8 @@ bool isWithinBounds(Point p, vector< string > prison) {
 }
 
 void displayMatrix(vector<string> prison) {
-    for (string row : prison) {
-        cout << row << endl; // Each row of the matrix
+    for(int i = 0; i < prison.size(); i++) {
+        cout << prison[i] << endl; // Each row of the matrix
     }
 
     usleep(0*1000);
