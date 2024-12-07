@@ -4,6 +4,7 @@
 #include <string>
 #include <set>
 #include <sstream>
+#include <unistd.h>
 #include <unordered_set>
 #include <vector>
 #include <regex>
@@ -22,6 +23,7 @@ struct Point {
     }
 };
 
+void escapePrison(Point, vector <string>, unordered_map<char, set <Point> >);
 void displayMatrix(vector<string> prison);
 bool isWithinBounds(Point, vector< string >);
 enum direction {UP, DOWN, LEFT, RIGHT};
@@ -64,14 +66,14 @@ int main(int argc, char* argv[]) {
                 guard.x = i;
                 guard.y = j;
             }
-            cout << prison[i][j];
+
         }
-        cout << endl;
+
     }
 
     //int steps = 0;
     while(isWithinBounds(guard, prison)) {
-        //displayMatrix(prison);
+        displayMatrix(prison);
         // Add the point to the set
         points.insert(guard);
         // Check if the next position is an obstacle based on the direction the guard is facing
@@ -79,9 +81,7 @@ int main(int argc, char* argv[]) {
             case '^': {
                 // If theres a block above, move right
                 if(prison[guard.x-1][guard.y] == '#') {
-                    prison[guard.x][guard.y] = '.';
-                    prison[guard.x][guard.y+1] = '>';
-                    guard.y++;
+                    prison[guard.x][guard.y] = '>';
                 } else {
                 // Else just continue
                     prison[guard.x-1][guard.y] = '^';
@@ -92,9 +92,7 @@ int main(int argc, char* argv[]) {
             }
             case 'v': {
                 if(prison[guard.x+1][guard.y] == '#') {
-                    prison[guard.x][guard.y] = '.';
-                    prison[guard.x][guard.y-1] = '<';
-                    guard.y--;
+                    prison[guard.x][guard.y] = '<';
                 } else {
                     prison[guard.x+1][guard.y] = 'v';
                     prison[guard.x][guard.y] = '.';
@@ -104,9 +102,7 @@ int main(int argc, char* argv[]) {
             }
             case '<': {
                 if(prison[guard.x][guard.y-1] == '#') {
-                    prison[guard.x][guard.y] = '.';
-                    prison[guard.x-1][guard.y] = '^';
-                    guard.x--;
+                    prison[guard.x][guard.y] = '^';
                 } else {
                     prison[guard.x][guard.y-1] = '<';
                     prison[guard.x][guard.y] = '.';
@@ -116,9 +112,7 @@ int main(int argc, char* argv[]) {
             }
             case '>': {
                 if(prison[guard.x][guard.y+1] == '#') {
-                    prison[guard.x][guard.y] = '.';
-                    prison[guard.x+1][guard.y] = 'v';
-                    guard.x++;
+                    prison[guard.x][guard.y] = 'v';
                 } else {
                     prison[guard.x][guard.y+1] = '>';
                     prison[guard.x][guard.y] = '.';
@@ -127,7 +121,6 @@ int main(int argc, char* argv[]) {
                 break;
             }
         }
-        //steps++;
     }
 
     cout << "Position of the guard: " << guard.x << " " << guard.y << endl;
@@ -146,5 +139,8 @@ void displayMatrix(vector<string> prison) {
     for (string row : prison) {
         cout << row << endl; // Each row of the matrix
     }
+
+    usleep(500*1000);
+    system("clear");
     cout << flush; // Ensure output is flushed (optional here)
 }

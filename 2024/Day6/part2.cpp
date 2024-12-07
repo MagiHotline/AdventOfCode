@@ -1,149 +1,228 @@
-#include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <string>
+#include <set>
 #include <sstream>
-#include <unordered_set>
+#include <unordered_map>
 #include <vector>
-#include <regex>
 #include <iostream>
+#include <unistd.h>
+
 using namespace std;
 
-typedef struct Rule {
-    int prec;
-    int succ;
-}rule;
+struct Point {
+    int x, y;
 
-int returnMiddleValueinUpdate(vector<int>);
-bool isWellCorrected(vector<rule>, vector<int>);
-int fixUpdate(vector<rule>, vector<int>, int&);
-void swap(int *a, int *b) {
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
+    // Constructor
+    Point(int x, int y) : x(x), y(y) {}
+
+    // Comparison operator for use in std::set
+    bool operator<(const Point& other) const {
+        return x < other.x || (x == other.x && y < other.y);
+    }
+};
+
+void displayMatrix(vector<string> prison);
+bool isWithinBounds(Point, vector< string >);
+
 
 int main(int argc, char* argv[]) {
 
-  if(argc != 3) {
-        cout << "Usage: " << argv[0] << " <input_rules> <input_updates>" << endl;
+  if(argc != 2) {
+        cout << "Usage: " << argv[0] << " <input_updates>" << endl;
         exit(1);
     }
 
-    // Get the files
-    FILE *inputRules = fopen(argv[1], "r");
-    ifstream inputUpdates(argv[2]);
-    if(!inputRules || !inputUpdates) {
+    ifstream input(argv[1]);
+    if(!input) {
         cout << "Error opening file" << endl;
         exit(1);
     }
 
-    // GEt the rules
-    vector<rule> rules;
-    while(!feof(inputRules))
-    {
-        rule r;
-        fscanf(inputRules, "%d|%d\n", &r.prec, &r.succ);
-        rules.push_back(r);
+    // get the matrix
+    vector< string > prison;
+    while(!input.eof()) {
+        string line;
+        getline(input, line);
+        if(!line.empty())
+            prison.push_back(line);
     }
 
-    // Get the updates
-    vector< vector<int> > updates;
-    while(!inputUpdates.eof()) {
-        vector<int> update;
-        int value;
-        while(inputUpdates >> value) {
-            update.push_back(value);
-            if(inputUpdates.get() == '\n') break;
-        }
+    unordered_map<char, set < Point > > check;
 
-        if(!update.empty()) updates.push_back(update);
-    }
-
-    int sol = 0;
-    int countSwaps = 0;
-
-    for(int i = 0; i < updates.size(); i++) {
-        // Take the incorrected updates...
-        if(!isWellCorrected(rules, updates[i])) {
-            // And fix them!
-            sol += fixUpdate(rules, updates[i], countSwaps);
+    Point guard(0, 0);
+    int xguard, yguard;
+    int countCycles = 0;
+    // Find point where the guard is
+    for(int i = 0; i < prison.size(); i++) {
+        for(int j = 0; j < prison[i].size(); j++) {
+            if(prison[i][j] == '^') {
+                xguard = guard.x = i;
+                yguard = guard.y = j;
+            }
         }
     }
 
-    cout << "Soluzione: " << sol << endl;
-    cout << "Swaps: " << countSwaps << endl;
+    set< Point > points;
 
-    fclose(inputRules);
-    inputUpdates.close();
+    while(isWithinBounds(guard, prison)) {
+        //displayMatrix(prison);
+        // Add the point to the set
+        points.insert(guard);
+        // Check if the next position is an obstacle based on the direction the guard is facing
+        switch(prison[guard.x][guard.y]) {
+            case '^': {
+                // If theres a block above, move right
+                if(prison[guard.x-1][guard.y] == '#') {
+                    prison[guard.x][guard.y] = '.';
+                    prison[guard.x][guard.y+1] = '>';
+                    guard.y++;
+                } else {
+                // Else just continue
+                    prison[guard.x-1][guard.y] = '^';
+                    prison[guard.x][guard.y] = '.';
+                    guard.x--;
+                }
+                break;
+            }
+            case 'v': {
+                if(prison[guard.x+1][guard.y] == '#') {
+                    prison[guard.x][guard.y] = '.';
+                    prison[guard.x][guard.y-1] = '<';
+                    guard.y--;
+                } else {
+                    prison[guard.x+1][guard.y] = 'v';
+                    prison[guard.x][guard.y] = '.';
+                    guard.x++;
+                }
+                break;
+            }
+            case '<': {
+                if(prison[guard.x][guard.y-1] == '#') {
+                    prison[guard.x][guard.y] = '.';
+                    prison[guard.x-1][guard.y] = '^';
+                    guard.x--;
+                } else {
+                    prison[guard.x][guard.y-1] = '<';
+                    prison[guard.x][guard.y] = '.';
+                    guard.y--;
+                }
+                break;
+            }
+            case '>': {
+                if(prison[guard.x][guard.y+1] == '#') {
+                    prison[guard.x][guard.y] = '.';
+                    prison[guard.x+1][guard.y] = 'v';
+                    guard.x++;
+                } else {
+                    prison[guard.x][guard.y+1] = '>';
+                    prison[guard.x][guard.y] = '.';
+                    guard.y++;
+                }
+                break;
+            }
+        }
+    }
+
+
+    for(Point p : points) {
+        // SET THE PRISON FOR THE TRYOUT
+        prison[p.x][p.y] = '#'; // SET THE OBSTACLE
+        check.clear(); // Clear the map
+        int countSameSpot = 0; // Reset the counter for same spot
+        prison[guard.x][guard.y] = '.'; // remove the guard beofre from the prison
+        // Reset the guard position
+        guard.x = xguard;
+        guard.y = yguard;
+        prison[xguard][yguard] = '^'; // Reset the guard in the matrix
+            // ALGORITMO
+            while(isWithinBounds(guard, prison)) {
+                if(check[prison[guard.x][guard.y]].find(guard) != check[prison[guard.x][guard.y]].end()) {
+                    countSameSpot++;
+                }
+
+                // Insert the new point in the set of the associated directions
+                check[prison[guard.x][guard.y]].insert(guard);
+
+                // If I stepped in the same spot two times facing the same direction
+                // then its a cycles
+                if(countSameSpot > 1) {
+                    //cout << "Cycle detected" << endl;
+                    // When it ends, remove the guard from the prison
+                    prison[guard.x][guard.y] = '.';
+                    countCycles++; // Increment the cycles
+                    prison[p.x][p.y] = '.'; // Reset the obstacle
+                    break;
+                }
+
+                // Check the next position: if it's an obstacle, turn 90 degrees to the right
+                switch(prison[guard.x][guard.y]) {
+                    case '^': {
+                        // If theres a block above, move right
+                        if(prison[guard.x-1][guard.y] == '#') {
+                            prison[guard.x][guard.y] = '>';
+                        } else {
+                        // Else just continue
+                            prison[guard.x-1][guard.y] = '^';
+                            prison[guard.x][guard.y] = '.';
+                            guard.x--;
+                        }
+                        break;
+                    }
+                    case 'v': {
+                        if(prison[guard.x+1][guard.y] == '#') {
+                            prison[guard.x][guard.y] = '<';
+                        } else {
+                            prison[guard.x+1][guard.y] = 'v';
+                            prison[guard.x][guard.y] = '.';
+                            guard.x++;
+                        }
+                        break;
+                    }
+                    case '<': {
+                        if(prison[guard.x][guard.y-1] == '#') {
+                            prison[guard.x][guard.y] = '^';
+                        } else {
+                            prison[guard.x][guard.y-1] = '<';
+                            prison[guard.x][guard.y] = '.';
+                            guard.y--;
+                        }
+                        break;
+                    }
+                    case '>': {
+                        if(prison[guard.x][guard.y+1] == '#') {
+                            prison[guard.x][guard.y] = 'v';
+                        } else {
+                            prison[guard.x][guard.y+1] = '>';
+                            prison[guard.x][guard.y] = '.';
+                            guard.y++;
+                        }
+                        break;
+                    }
+                }
+                //cout << guard.x << " " << guard.y << endl;
+            }
+            // Reset the obstacle position after the cycle
+            prison[p.x][p.y] = '.';
+    }
+    //cout << "Position of the guard: " << guard.x << " " << guard.y << endl;
+    cout << "Solution: " << countCycles << endl;
+    input.close();
     return 0;
 }
 
-// Function that returns the middle value of the vector
-int returnMiddleValueinUpdate(vector<int> arr) {
-    return arr[arr.size()/2];
+
+// We pass the point and the matrix
+bool isWithinBounds(Point p, vector< string > prison) {
+    return p.x >= 0 && p.y >= 0 && p.x < prison.size() && p.y < prison[p.x].size();
 }
 
-// Function that fixes the update based on the rules
-int fixUpdate(vector<rule> rules, vector<int> update, int &countSwaps) {
-    vector<int> fixedUpdate;
-    int savePos = 0;
-    unordered_set<int> check;
-    // Insert the element in the set to check if it is present
-    for(int i = 0; i < update.size(); i++) check.insert(update[i]);
-    bool swapped;
-
-    while(!isWellCorrected(rules, update)) {
-        for(int i = 0; i < update.size(); i++) {
-            swapped = false;
-            // Check if there are rules like x|update[i]
-            for(int j = 0; j < rules.size(); j++) {
-                if(rules[j].succ == update[i]) {
-                    // CHECK FOR EVERY RULE WHERE UPDATE[I] APPEARS AS A SUCC, AND SEARCH PREC INTO THE UPDATE
-                    if(check.find(rules[j].prec) != check.end()) {
-                        for(int k = i+1; k < update.size() && !swapped; k++) {
-                            // IF THE ELEMENT THAT SHOULD BE BEFORE IS AFTER, THEN I SWAP
-                            if(update[k] == rules[j].prec) {
-                                swap(update[i], update[k]);
-                                countSwaps++;
-                                swapped = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+void displayMatrix(vector<string> prison) {
+    for (string row : prison) {
+        cout << row << endl; // Each row of the matrix
     }
 
-    // Return the middle value of the fixed update
-    return returnMiddleValueinUpdate(update);
-}
-
-// Checls for every update[i] in r.succ and check for the update]
-bool isWellCorrected(vector<rule> rules, vector<int> update) {
-    unordered_set<int> check;
-    // Insert the element in the set to check if it is present
-    for(int i = 0; i < update.size(); i++) check.insert(update[i]);
-
-    for(int i = 0; i < update.size(); i++) {
-        // Check if we find something like this -> x|update[i]
-        for(int j = 0; j < rules.size(); j++) {
-            if(rules[j].succ == update[i]) {
-                // If it find something x|update[i] in the rules
-                if(check.find(rules[j].prec) != check.end()) {
-                    bool found = false;
-                    for(int k = 0; k < i && !found; k++) {
-                        if(update[k] == rules[j].prec) {
-                            found = true;
-                        }
-                    }
-                    // If it doesn't find the prec in the sub range of the update
-                    // then return false
-                    if(!found) return false;
-                }
-            }
-        }
-    }
-
-    return true;
+    usleep(0*1000);
+    system("clear");
+    cout << flush; // Ensure output is flushed (optional here)
 }
