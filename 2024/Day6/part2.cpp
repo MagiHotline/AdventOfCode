@@ -141,14 +141,16 @@ int main(int argc, char* argv[]) {
         prison[p.x][p.y] = '#'; // SET THE OBSTACLE
         check.clear(); // Clear the points visited
         countSameSpot = 0; // Reset the counter for same spot
-        prison[guard.x][guard.y] = '.'; // remove the guard beofre from the prison
+        if(isWithinBounds(guard,prison)) {
+            prison[guard.x][guard.y] = '.'; // remove the guard beofre from the prison
+        }
         // Reset the guard position
         guard.x = xguard;
         guard.y = yguard;
         prison[xguard][yguard] = '^'; // Reset the guard in the matrix
             // ALGORITMO
         while(isWithinBounds(guard, prison)) {
-           // displayMatrix(prison);
+            //displayMatrix(prison);
 
             // Check if the guard is in the same spot
             if(check[prison[guard.x][guard.y]].find(guard) != check[prison[guard.x][guard.y]].end()) {
@@ -260,7 +262,7 @@ void displayMatrix(vector<string> prison) {
         cout << prison[i] << endl; // Each row of the matrix
     }
 
-    usleep(0*1000);
+    usleep(50*1000);
     system("clear");
     cout << flush; // Ensure output is flushed (optional here)
 }
