@@ -73,7 +73,6 @@ int main(int argc, char* argv[]) {
 
     //int steps = 0;
     while(isWithinBounds(guard, prison)) {
-        displayMatrix(prison);
         // Add the point to the set
         points.insert(guard);
         // Check if the next position is an obstacle based on the direction the guard is facing
@@ -140,7 +139,7 @@ void displayMatrix(vector<string> prison) {
         cout << row << endl; // Each row of the matrix
     }
 
-    usleep(500*1000);
+    usleep(50*1000);
     system("clear");
     cout << flush; // Ensure output is flushed (optional here)
 }
