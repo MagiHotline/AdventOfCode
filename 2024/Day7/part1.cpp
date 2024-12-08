@@ -6,24 +6,6 @@
 
 using namespace std;
 
-// Function to evaluate an expression left-to-right, ignoring operator precedence
-long long eval(const string& expression) {
-    istringstream iss(expression);
-    long long result, num;
-    char op;
-
-    iss >> result;
-    while (iss >> op >> num) {
-        if (op == '+') {
-            result += num;
-        } else if (op == '*') {
-            result *= num;
-        }
-    }
-
-    return result;
-}
-
 // Backtracking function to generate all possible expressions and check against the target
 /*
 numbers: the list of numbers to use
@@ -31,20 +13,20 @@ index: the current index in the numbers list
 currentExpression: the current expression being built
 target: the target value to match
 */
-bool calibrate(const vector<long long>& numbers, size_t index, const string& currentExpression, long long target) {
+bool calibrate(const vector<long long>& numbers, size_t index, long long currentExpression, long long target) {
     // If we have reached the end of the numbers list, evaluate the expression
     if (index == numbers.size()) {
-        long long value = eval(currentExpression);
         // Return true if the expression evaluates to the target
-        return value == target;
+        return currentExpression == target;
     }
 
     // Add the current number with '+' or '*' and generate further recursive calls
     // The OR operator is used to short-circuit the evaluation if a match is found.
     // The only way that the backtrack functions returns false is that all two options return false.
-    return calibrate(numbers, index + 1, currentExpression + "+" + to_string(numbers[index]), target)
-     | calibrate(numbers, index + 1, currentExpression + "*" + to_string(numbers[index]), target);
+    return calibrate(numbers, index + 1, currentExpression + numbers[index], target)
+     | calibrate(numbers, index + 1, currentExpression * numbers[index], target);
 }
+
 
 int main(int argc, char* argv[]) {
 
@@ -73,7 +55,7 @@ int main(int argc, char* argv[]) {
             numbers.push_back(num);
         }
 
-        if (calibrate(numbers, 1, to_string(numbers[0]), target)) {
+        if (calibrate(numbers, 1, numbers[0], target)) {
             // match found
             totalCalibrationResult += target;
         }

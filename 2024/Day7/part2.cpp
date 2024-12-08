@@ -6,8 +6,7 @@
 
 using namespace std;
 
-long long evaluate(const string&);
-bool calibrate(const vector<long long>&, size_t, const string&, long long);
+bool calibrate(const vector<long long>&, size_t, long long, long long);
 long long concatenate(long long, long long);
 
 int main(int argc, char* argv[]) {
@@ -36,7 +35,7 @@ int main(int argc, char* argv[]) {
             numbers.push_back(num);
         }
 
-        if (calibrate(numbers, 1, to_string(numbers[0]), target)) {
+        if (calibrate(numbers, 1, numbers[0], target)) {
             // match found
             totalCalibrationResult += target;
         }
@@ -53,45 +52,23 @@ index: the current index in the numbers list
 currentExpression: the current expression being built
 target: the target value to match
 */
-bool calibrate(const vector<long long>& numbers, size_t index, const string& currentExpression, long long target) {
-    // If the index reaches the numbers size, evaluate the expression
+bool calibrate(const vector<long long>& numbers, size_t index, long long currentExpression, long long target) {
+    // If we have reached the end of the numbers list, evaluate the expression
     if (index == numbers.size()) {
-        //cout << target << " = " << currentExpression << endl;
-        long long value = evaluate(currentExpression);
         // Return true if the expression evaluates to the target
-        return value == target;
+        return currentExpression == target;
     }
 
-    // Generates further recursive calls and may return true or false.
+    // Add the current number with '+' or '*' and generate further recursive calls
     // The OR operator is used to short-circuit the evaluation if a match is found.
-    // The only way that the backtrack functions returns false is that all three options return false.
-    return calibrate(numbers, index + 1, currentExpression + "+" + to_string(numbers[index]), target)
-    | calibrate(numbers, index + 1, currentExpression + "*" + to_string(numbers[index]), target)
-    | calibrate(numbers, index + 1, currentExpression + "|" + to_string(numbers[index]), target);
+    // The only way that the backtrack functions returns false is that all two options return false.
+    return calibrate(numbers, index + 1, currentExpression + numbers[index], target)
+     | calibrate(numbers, index + 1, currentExpression * numbers[index], target)
+     | calibrate(numbers, index+1, concatenate(currentExpression, numbers[index]), target);
 }
 
 // Concatenate function
 long long concatenate(long long a, long long b) {
     string s = to_string(a) + to_string(b);
     return stoll(s);
-}
-
-// Function to evaluate an expression left-to-right, ignoring operator precedence
-long long evaluate(const string& expression) {
-    istringstream iss(expression);
-    long long result, num;
-    char op;
-
-    iss >> result;
-    while (iss >> op >> num) {
-        if (op == '+') {
-            result += num;
-        } else if (op == '*') {
-            result *= num;
-        } else if(op == '|') {
-            result = concatenate(result, num);
-        }
-    }
-
-    return result;
 }
