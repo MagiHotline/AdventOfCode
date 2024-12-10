@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
                 fileToGetOrdered = getLastFileWithFreeSpace(files);
             }
 
-            //displayFiles(files);
+            displayFiles(files);
         }
         fileToGetOrdered--;
     } while(fileToGetOrdered > firstEmptyFile);
@@ -156,15 +156,19 @@ int main(int argc, char* argv[]) {
 void displayFiles(vector< File > files) {
     for(File f : files) {
         for(int i = 0; i < f.size; i++) {
-            cout << f.id;
+            cout << "⬜";
         }
 
         for(int i = 0; i < f.freespace; i++) {
-            cout << '.';
+            cout << " ";
         }
     }
     cout << endl;
+    usleep(50*1000);
+    system("clear");
+    cout << flush;
 }
+
 
 string fileToString(vector < File > files) {
     string s = "";

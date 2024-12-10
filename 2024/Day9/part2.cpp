@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <iostream>
+#include <ratio>
 #include <vector>
 #include <fstream>
 #include <string>
@@ -17,6 +18,7 @@ typedef struct File {
 }File;
 
 void displayFiles(vector< File > files);
+void displayFilesNormally(vector < File > files);
 string fileToString(vector < File > files);
 bool isFinished(string compactDisk);
 string defrag(string memory);
@@ -24,6 +26,17 @@ string defrag(string memory);
 // Returns the index of the first file with free space
 int getFirstFileWithFreeSpace(vector < File > files) {
     for(int i = 0; i < files.size(); i++) {
+        // return the file with the first free space
+        if(files[i].freespace > 0) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+// Returns the index of the first file with free space
+int getFirstFileWithFreeSpace(vector < File > files, int offset) {
+    for(int i = offset+1; i < files.size(); i++) {
         // return the file with the first free space
         if(files[i].freespace > 0) {
             return i;
@@ -44,14 +57,32 @@ int getLastFileWithFreeSpace (vector < File > files) {
     return 0;
 }
 
+// Returns the index of the last file with free space
+int getLastFileWithFreeSpace (vector < File > files, int offset) {
+    for(int i = files.size()-1-offset; i >= 0; i--) {
+        // return the file with the first free space
+        if(files[i].freespace > 0) {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+
 long long checksum(vector < File > files) {
     long long checksum = 0;
     long long counter = 0;
     for(long long i = 0; i < files.size(); i++) {
         for(long long j = 0; j < files[i].size; j++) {
+
             checksum += files[i].id * counter;
-            //cout << "\n"<< files[i].id << " * " << counter << " = " << checksum << endl;
+            cout << "\n"<< files[i].id << " * " << counter << " = " << checksum << endl;
             counter++;
+        }
+
+        if(files[i].freespace > 0) {
+            counter += files[i].freespace;
         }
     }
 
@@ -92,59 +123,47 @@ int main(int argc, char* argv[]) {
         files.push_back(f);
     }
 
-    displayFiles(files);
-
-    // [0,1,2] [1,3,4] [2,5,0]
-    //     ->[2,2,0]
-    // [0,1,0] [2,2,0] [2,3,2]
-
-    //File firstFile = getFirstFileWithFreeSpace(files);
-    //File lastFile = getLastFileWithFreeSpace(files);
-    bool valid = false;
-
-    // [0,1,2]j [1,3,4] [2,5,0]i ->
-    // -> 1) Viene creato un nuovo file -> [2,0,2]x
-    // -> 2) Se [0,1,2] (2) > 0 && [2,5,0] (5) > 0 allora continua il loop
-    // -> 3) -> Si entra nel loop
-    //         -> [2,4,1]i -> [0,1,1]j -> [2,1,1]x si rientra nel loop
-    //         -> [2,3,2]i -> [0,1,0]j -> [2,2,0] si esce dal loop poiché j.freespace == 0
-    //        [0,1,0] [2,2,0] [1,3,4] [2,3,2]
-    //        022111....222..
-    // [0,1,2] [1,3,4] [2,5,0]
-
-    // Takes the index of the file that has to be compacted
+    displayFilesNormally(files);
+    //Takes the index of the file that has to be compacted
     int fileToGetOrdered = files.size()-1;
+    bool inserted;
     // Takes the index of the first file with free space
     int firstEmptyFile = getFirstFileWithFreeSpace(files);
     do {
+        //inserted = false;
         while(files[fileToGetOrdered].size > 0) {
-            valid = false;
-            File newFile;
-            newFile.id = files[fileToGetOrdered].id;
-            newFile.size = 0;
-            newFile.freespace = files[firstEmptyFile].freespace;
+            // If size is greater than freespace than move to the next first empty space
+            if(files[fileToGetOrdered].size > files[firstEmptyFile].freespace) {
+                if(firstEmptyFile >= fileToGetOrdered) {
+                    // If I have tried every single combination
+                    firstEmptyFile = getFirstFileWithFreeSpace(files);
+                    //inserted = false;
+                    break;
+                }
+                firstEmptyFile = getFirstFileWithFreeSpace(files, firstEmptyFile);
+                //inserted = false;
+                //[2,5,0](idx=2) >= [0,1,2](idx=0) ->  5>=2 FEF=0 -> search from 0+1
+                //[2,5,0] >= [1,3,4]->  5>=4
+                // so if the size of the file I wanna insert is bigger, go to the next empty file
+            } else {
+                // instead if theres enough space in the empty file, insert the file
+                File newFile;
+                newFile.id = files[fileToGetOrdered].id;
+                newFile.size = files[fileToGetOrdered].size;
+                newFile.freespace = files[firstEmptyFile].freespace - files[fileToGetOrdered].size;
 
-            while(files[firstEmptyFile].freespace > 0 && files[fileToGetOrdered].size > 0) {
-                    files[fileToGetOrdered].freespace++;
-                    files[fileToGetOrdered].size--;
-                    files[firstEmptyFile].freespace--;
+                // Move the file to the first empty file
+                files[firstEmptyFile].freespace = 0; // Set the file where im putting the file as 0
+                files[fileToGetOrdered].freespace = files[fileToGetOrdered].size + files[fileToGetOrdered].freespace; // The freespace becomes the size
+                files[fileToGetOrdered].size = 0; // The size then is set to 0
 
-                    newFile.size++;
-                    newFile.freespace--;
-                    valid = true;
-            }
-
-            while(files[firstEmptyFile].freespace > 0) {
-                files[firstEmptyFile].freespace--;
-            }
-
-            if(valid == true) {
                 files.insert(files.begin()+firstEmptyFile+1, newFile);
+                //inserted = true;
                 firstEmptyFile = getFirstFileWithFreeSpace(files);
-                fileToGetOrdered = getLastFileWithFreeSpace(files);
+                fileToGetOrdered = getLastFileWithFreeSpace(files, 1);
             }
-
             //displayFiles(files);
+            displayFilesNormally(files);
         }
         fileToGetOrdered--;
     } while(fileToGetOrdered > firstEmptyFile);
@@ -156,41 +175,28 @@ int main(int argc, char* argv[]) {
 void displayFiles(vector< File > files) {
     for(File f : files) {
         for(int i = 0; i < f.size; i++) {
+            cout << "⬜";
+        }
+
+        for(int i = 0; i < f.freespace; i++) {
+            cout << " ";
+        }
+    }
+    cout << endl;
+    usleep(50*1000);
+    system("clear");
+    cout << flush;
+}
+
+void displayFilesNormally(vector< File > files) {
+    for(File f : files) {
+        for(int i = 0; i < f.size; i++) {
             cout << f.id;
         }
 
         for(int i = 0; i < f.freespace; i++) {
-            cout << '.';
+            cout << ".";
         }
     }
     cout << endl;
-}
-
-string fileToString(vector < File > files) {
-    string s = "";
-    for(int i = 0; i < files.size(); i++) {
-        for(int j = 0; j < files[i].size; j++) {
-            s += to_string(i);
-        }
-
-        for(int j = 0; j < files[i].freespace; j++) {
-            s += ".";
-        }
-    }
-
-    return s;
-}
-
-bool isFinished(string compactDisk) {
-    for(int i = 0; i < compactDisk.size(); i++) {
-        if(compactDisk[i+1] == '.') {
-            for(int j = i+1; j < compactDisk.size(); j++) {
-                if(compactDisk[j] != '.') {
-                    return false;
-                }
-            }
-        }
-    }
-
-    return true;
 }
