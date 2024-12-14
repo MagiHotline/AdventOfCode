@@ -47,6 +47,7 @@ void applyRuleTwo(ull stone, ull &left, ull &right) {
 
 unordered_map<ull, ull> blink(unordered_map<ull, ull> stones) {
     unordered_map<ull, ull> newStones;
+    newStones.reserve(stones.size());
     for (auto stone : stones) {
         ull stoneValue = stone.first;
         ull stoneCount = stone.second;

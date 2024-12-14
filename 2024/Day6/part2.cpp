@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
             prison.push_back(line);
     }
 
-    unordered_map<char, set < Point > > check;
+
 
     Point guard(0, 0);
     int xguard, yguard;
@@ -64,6 +64,7 @@ int main(int argc, char* argv[]) {
     }
 
     set< Point > points;
+    unordered_map<string, set < Point > > check;
 
     while(isWithinBounds(guard, prison)) {
        // displayMatrix(prison);
@@ -136,100 +137,74 @@ int main(int argc, char* argv[]) {
     }
 
     int countSameSpot = 0;
-    for(Point p : points) {
-        // SET THE PRISON FOR THE TRYOUT
-        prison[p.x][p.y] = '#'; // SET THE OBSTACLE
-        check.clear(); // Clear the points visited
-        countSameSpot = 0; // Reset the counter for same spot
-        if(isWithinBounds(guard,prison)) {
-            prison[guard.x][guard.y] = '.'; // remove the guard beofre from the prison
-        }
-        // Reset the guard position
+    for (Point p : points) {
+        // Place the obstacle
+        prison[p.x][p.y] = '#';
+        check.clear();          // Reset visited states
+        set<string> visitedStates; // Track unique visited states for this trial
+
+        // Reset the guard's position
         guard.x = xguard;
         guard.y = yguard;
-        prison[xguard][yguard] = '^'; // Reset the guard in the matrix
-            // ALGORITMO
-        while(isWithinBounds(guard, prison)) {
-            //displayMatrix(prison);
+        prison[xguard][yguard] = '^';
 
-            // Check if the guard is in the same spot
-            if(check[prison[guard.x][guard.y]].find(guard) != check[prison[guard.x][guard.y]].end()) {
-                countSameSpot++;
-            }
+        bool validCycle = false; // Track if a valid cycle is found
 
-            // Insert the new point in the set of the associated directions
+        // Simulate guard movement
+        while (isWithinBounds(guard, prison)) {
+            // Create a unique state key
+            string stateKey = to_string(guard.x) + "," + to_string(guard.y) + "," + prison[guard.x][guard.y];
 
-            check[prison[guard.x][guard.y]].insert(guard);
-
-
-            // If I stepped in the same spot two times facing the same direction
-            // then its a cycles
-            if(countSameSpot > 1) {
-                //cout << "Cycle detected" << endl;
-                // When it ends, remove the guard from the prison
-                prison[guard.x][guard.y] = '.';
-                countCycles++; // Increment the cycles
-                prison[p.x][p.y] = '.'; // Reset the obstacle
+            // Check if this state has been visited
+            if (visitedStates.count(stateKey) > 0) {
+                // If revisiting the same state, mark as a valid cycle
+                validCycle = true;
                 break;
+            } else {
+                visitedStates.insert(stateKey); // Mark state as visited
             }
 
-            switch(prison[guard.x][guard.y]) {
+            // Move the guard based on direction
+            switch (prison[guard.x][guard.y]) {
                 case '^': {
-                    if(!isWithinBounds(Point(guard.x-1, guard.y), prison)) {
-                        prison[guard.x][guard.y] = '.';
-                        guard.x--;
-                        break;
-                    }
-                    if(prison[guard.x-1][guard.y] == '#') {
+                    if (!isWithinBounds(Point(guard.x - 1, guard.y), prison)) break;
+                    if (prison[guard.x - 1][guard.y] == '#') {
                         prison[guard.x][guard.y] = '>';
                     } else {
-                    // Else just continue
-                        prison[guard.x-1][guard.y] = '^';
+                        prison[guard.x - 1][guard.y] = '^';
                         prison[guard.x][guard.y] = '.';
                         guard.x--;
                     }
                     break;
                 }
                 case 'v': {
-                    if(!isWithinBounds(Point(guard.x+1, guard.y), prison)) {
-                        prison[guard.x][guard.y] = '.';
-                        guard.x++;
-                        break;
-                    }
-                    if(prison[guard.x+1][guard.y] == '#') {
+                    if (!isWithinBounds(Point(guard.x + 1, guard.y), prison)) break;
+                    if (prison[guard.x + 1][guard.y] == '#') {
                         prison[guard.x][guard.y] = '<';
                     } else {
-                        prison[guard.x+1][guard.y] = 'v';
+                        prison[guard.x + 1][guard.y] = 'v';
                         prison[guard.x][guard.y] = '.';
                         guard.x++;
                     }
                     break;
                 }
                 case '<': {
-                    if(!isWithinBounds(Point(guard.x, guard.y-1), prison)) {
-                        prison[guard.x][guard.y] = '.';
-                        guard.y--;
-                        break;
-                    }
-                    if(prison[guard.x][guard.y-1] == '#') {
+                    if (!isWithinBounds(Point(guard.x, guard.y - 1), prison)) break;
+                    if (prison[guard.x][guard.y - 1] == '#') {
                         prison[guard.x][guard.y] = '^';
                     } else {
-                        prison[guard.x][guard.y-1] = '<';
+                        prison[guard.x][guard.y - 1] = '<';
                         prison[guard.x][guard.y] = '.';
                         guard.y--;
                     }
                     break;
                 }
                 case '>': {
-                    if(!isWithinBounds(Point(guard.x, guard.y+1), prison)) {
-                        prison[guard.x][guard.y] = '.';
-                        guard.y++;
-                        break;
-                    }
-                    if(prison[guard.x][guard.y+1] == '#') {
+                    if (!isWithinBounds(Point(guard.x, guard.y + 1), prison)) break;
+                    if (prison[guard.x][guard.y + 1] == '#') {
                         prison[guard.x][guard.y] = 'v';
                     } else {
-                        prison[guard.x][guard.y+1] = '>';
+                        prison[guard.x][guard.y + 1] = '>';
                         prison[guard.x][guard.y] = '.';
                         guard.y++;
                     }
@@ -237,7 +212,13 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-        // Reset the obstacle position after the cycle
+
+        // Increment cycle count if a valid cycle was detected
+        if (validCycle) {
+            countCycles++;
+        }
+
+        // Reset the obstacle for the next trial
         prison[p.x][p.y] = '.';
     }
 

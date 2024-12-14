@@ -1,2 +1,5 @@
 *.txt
 .DS_Store
+# AOC TILES
+.aoc_tiles/*
+!.aoc_tiles/tiles/
